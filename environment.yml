@@ -1,0 +1,8 @@
+name: mnist
+dependencies:
+  - python=3.8
+  # - numpy
+  # - pandas
+  - pytorch=1.12
+  - torchvision=0.13
+  - matplotlib
