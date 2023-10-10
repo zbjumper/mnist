@@ -77,7 +77,7 @@ for epoch in range(EPOCH):
         x, y = x.to(device), y.to(device)
 
         # 计算输出
-        output = net(x.cuda())
+        output = net(x)
         # 计算损失
         loss = loss_func(output, y)
 
@@ -94,7 +94,7 @@ for epoch in range(EPOCH):
             accuracy =(pred_y == test_y).sum().item()/CESHI
             print('step:', step + 1,'| epoch:',epoch,'| loss:',loss.data.cpu().numpy(),'| accuracy:',accuracy)
 
-test_output = net(test_x.cuda())
+test_output = net(test_x)
 print("test_output.shape:",test_output.shape)
 pred_y=torch.max(test_output,1)[1].data.squeeze()
 print('真实:',test_y.cpu().numpy())
