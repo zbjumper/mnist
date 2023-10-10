@@ -2,11 +2,18 @@ import torch
 import torch.nn as nn
 import torch.utils.data as Data
 import torchvision
+import matplotlib.pyplot as plt
+
+from torchvision import transforms
 
 import torch.nn.functional as F
 
 
 class CNN(nn.Module):
+    '''
+    卷积神经网络
+    手写数字识别
+    '''
     def __init__(self):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1)
@@ -43,13 +50,16 @@ CESHI = 2500
 train_data = torchvision.datasets.MNIST(
     root='./data',
     train=True,
-    transform=torchvision.transforms.ToTensor(),
+    transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(  # 归一化
+        (0.1307,), (0.3081,))]),
     download=True
 )
 
 test_data = torchvision.datasets.MNIST(
     root='./data',
-    train=False
+    train=False,
+    transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(  # 归一化
+        (0.1307,), (0.3081,))]),
 )
 
 train_loader = Data.DataLoader(
@@ -77,6 +87,9 @@ test_x, test_y = test_x.to(device), test_y.to(device)
 optimizer = torch.optim.SGD(net.parameters(), lr=LR)
 loss_func = nn.CrossEntropyLoss()
 
+traing_loss = []
+train_count = []
+
 for epoch in range(EPOCH):
     for step, (x, y) in enumerate(train_loader):
         x, y = x.to(device), y.to(device)
@@ -97,6 +110,11 @@ for epoch in range(EPOCH):
             test_output = net(test_x)
             pred_y = torch.max(test_output, 1)[1].data.squeeze()
             accuracy = (pred_y == test_y).sum().item()/CESHI
+
+            train_count.append((step + 1) * BATCH_SIZE + epoch *
+                               len(train_loader.dataset))
+            traing_loss.append(loss.item())
+
             print('step:', step + 1, '| epoch:', epoch, '| loss:',
                   loss.data.cpu().numpy(), '| accuracy:', accuracy)
 
@@ -107,3 +125,6 @@ print('真实:', test_y.cpu().numpy())
 print('预测:', pred_y.cpu().numpy())
 accuracy = (pred_y == test_y).sum().item()/CESHI
 print('accuracy:', accuracy)
+
+plt.plot(train_count, traing_loss, color='blue')
+plt.show()
