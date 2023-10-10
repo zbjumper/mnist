@@ -26,8 +26,6 @@ class CNN(nn.Module):
         x = self.fc3(x)  
 #         x = F.log_softmax(x,dim=1) NLLLoss()才需要，交叉熵不需要
         return x
-        
-
 
 # 批数量
 BATCH_SIZE=32
@@ -36,7 +34,7 @@ LR=0.01
 # 训练次数
 EPOCH=5
 # 测试数量
-CESHI=5000
+CESHI=2500
 
 train_data = torchvision.datasets.MNIST(
     root='./data',
@@ -69,33 +67,37 @@ net = CNN()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net = net.to(device)
 
+test_x, test_y = test_x.to(device), test_y.to(device)
 
 optimizer = torch.optim.SGD(net.parameters(), lr=LR)
 loss_func = nn.CrossEntropyLoss()
 
-print(train_loader)
 for epoch in range(EPOCH):
     for step, (x,y) in enumerate(train_loader):
-        # 重置梯度
-        optimizer.zero_grad()
+        x, y = x.to(device), y.to(device)
+
         # 计算输出
         output = net(x.cuda())
         # 计算损失
-        loss = loss_func(output, y.cuda())
+        loss = loss_func(output, y)
+
+        # 重置梯度
+        optimizer.zero_grad()
+
         # 反向传播， 使用链式反向求导的方法，一次计算模型中每个参数（即权重）的梯度
         loss.backward()
         optimizer.step()
 
-        if step%100==99:
-            test_output=net(test_x.cuda())
+        if step % 100 == 99:
+            test_output=net(test_x)
             pred_y = torch.max(test_output,1)[1].data.squeeze()
-            accuracy =(pred_y == test_y.cuda()).sum().item()/CESHI
-            print('step:', step + 1,'|epoch:',epoch,'|loss:',loss.data.cpu().numpy(),'|accuracy:',accuracy)
+            accuracy =(pred_y == test_y).sum().item()/CESHI
+            print('step:', step + 1,'| epoch:',epoch,'| loss:',loss.data.cpu().numpy(),'| accuracy:',accuracy)
 
 test_output = net(test_x.cuda())
 print("test_output.shape:",test_output.shape)
 pred_y=torch.max(test_output,1)[1].data.squeeze()
 print('真实:',test_y.cpu().numpy())
 print('预测:',pred_y.cpu().numpy())
-accuracy =(pred_y.cpu() == test_y).sum().item()/CESHI
+accuracy =(pred_y == test_y).sum().item()/CESHI
 print('accuracy:',accuracy)
