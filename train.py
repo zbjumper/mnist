@@ -18,7 +18,7 @@ class CNN(nn.Module):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
              
-        x = x.view(-1, 64 * 7* 7)#将数据平整为一维的 
+        x = x.view(-1, 64 * 7* 7) # 将数据平整为一维的
         x = F.relu(self.fc1(x))
 #         x = self.fc3(x)
 #         self.dp(x)
@@ -30,7 +30,7 @@ class CNN(nn.Module):
 
 
 # 批数量
-BATCH_SIZE=64
+BATCH_SIZE=32
 # 学习率
 LR=0.01
 # 训练次数
@@ -44,6 +44,7 @@ train_data = torchvision.datasets.MNIST(
     transform=torchvision.transforms.ToTensor(),
     download=True
 )
+
 test_data= torchvision.datasets.MNIST(
     root='./data',
     train=False
@@ -78,23 +79,23 @@ for epoch in range(EPOCH):
         # 重置梯度
         optimizer.zero_grad()
         # 计算输出
-        output = net(x)
+        output = net(x.cuda())
         # 计算损失
-        loss = loss_func(output, y)
+        loss = loss_func(output, y.cuda())
         # 反向传播， 使用链式反向求导的方法，一次计算模型中每个参数（即权重）的梯度
         loss.backward()
         optimizer.step()
 
         if step%100==99:
-            test_output=net(test_x)
+            test_output=net(test_x.cuda())
             pred_y = torch.max(test_output,1)[1].data.squeeze()
-            accuracy =(pred_y == test_y).sum().item()/CESHI
-            print('step:', step + 1,'|epoch:',epoch,'|loss:',loss.data.numpy(),'|accuracy:',accuracy)
+            accuracy =(pred_y == test_y.cuda()).sum().item()/CESHI
+            print('step:', step + 1,'|epoch:',epoch,'|loss:',loss.data.cpu().numpy(),'|accuracy:',accuracy)
 
-test_output = net(test_x)
+test_output = net(test_x.cuda())
 print("test_output.shape:",test_output.shape)
 pred_y=torch.max(test_output,1)[1].data.squeeze()
-print('真实:',test_y.numpy())
-print('预测:',pred_y.numpy())
-accuracy =(pred_y == test_y).sum().item()/CESHI
+print('真实:',test_y.cpu().numpy())
+print('预测:',pred_y.cpu().numpy())
+accuracy =(pred_y.cpu() == test_y).sum().item()/CESHI
 print('accuracy:',accuracy)
